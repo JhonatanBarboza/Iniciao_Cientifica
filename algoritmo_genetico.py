@@ -5,11 +5,11 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 # Configurações do algoritmo genético
-IND_SIZE = 10    # Otimização unidimensional
-POP_SIZE = 10   # Reduzido para melhor visualização
-CXPB = 0.7      # Probabilidade de crossover
-MUTPB = 0.2     # Probabilidade de mutação
-NGEN = 10       # Número de gerações
+IND_SIZE = 5    # Otimização unidimensional
+POP_SIZE = 10    # Reduzido para melhor visualização
+CXPB = 0.7       # Probabilidade de crossover
+MUTPB = 0.2      # Probabilidade de mutação
+NGEN = 10        # Número de gerações
 SEARCH_SPACE = [0, 5]  # Intervalo de busca
 
 # Definição da estrutura
@@ -26,7 +26,7 @@ def funcao_armadilha(x):
     """Função armadilha personalizada"""
     if isinstance(x, list):
         x = x[0]
-    return np.where(x < 4, -x + 4, np.where(x < 5, 5*x - 20, -1))
+    return np.where(x < 4, -x + 4, np.where(x < 5, 5*x - 20, 5))
 
 def evaluate(individual):
     return funcao_armadilha(individual),
@@ -53,7 +53,7 @@ def mutGaussian_clipped(individual, mu, sigma, indpb):
 # Operadores genéticos modificados
 toolbox.register("mate", cxBlend_clipped, alpha=0.5)
 toolbox.register("mutate", mutGaussian_clipped, mu=0, sigma=0.3, indpb=0.2)
-toolbox.register("select", tools.selTournament, tournsize=3)
+toolbox.register("select", tools.selTournament, tournsize=2)
 toolbox.register("evaluate", evaluate)
 
 # Configuração do plot
