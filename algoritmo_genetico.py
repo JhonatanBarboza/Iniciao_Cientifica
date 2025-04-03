@@ -5,9 +5,11 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 # Configurações do algoritmo genético
-IND_SIZE = 1  # Otimização unidimensional
-POP_SIZE = 10  # Reduzido para melhor visualização
-CXPB, MUTPB, NGEN = 0.7, 0.3, 50
+IND_SIZE = 10    # Otimização unidimensional
+POP_SIZE = 10   # Reduzido para melhor visualização
+CXPB = 0.7      # Probabilidade de crossover
+MUTPB = 0.2     # Probabilidade de mutação
+NGEN = 10       # Número de gerações
 SEARCH_SPACE = [0, 5]  # Intervalo de busca
 
 # Definição da estrutura
@@ -16,9 +18,8 @@ creator.create("Individual", list, fitness=creator.FitnessMin)
 
 # Inicialização do toolbox
 toolbox = base.Toolbox()
-toolbox.register("attribute", random.uniform, SEARCH_SPACE[0], SEARCH_SPACE[1])
-toolbox.register("individual", tools.initRepeat, creator.Individual, 
-                toolbox.attribute, n=IND_SIZE)
+toolbox.register("attr_bool", random.randint, 0, 1)
+toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.attr_bool, n=IND_SIZE)
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
 def funcao_armadilha(x):
@@ -30,9 +31,28 @@ def funcao_armadilha(x):
 def evaluate(individual):
     return funcao_armadilha(individual),
 
-# Operadores genéticos
-toolbox.register("mate", tools.cxBlend, alpha=0.5)
-toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=0.3, indpb=0.2)
+def clip_value(value, min_val, max_val):
+    """Garante que o valor esteja dentro dos limites"""
+    return min(max(value, min_val), max_val)
+
+def cxBlend_clipped(ind1, ind2, alpha):
+    """Crossover blend com clipping para manter dentro dos limites"""
+    for i in range(len(ind1)):
+        gamma = (1. + 2. * alpha) * random.random() - alpha
+        ind1[i] = clip_value(gamma * ind1[i] + (1. - gamma) * ind2[i], SEARCH_SPACE[0], SEARCH_SPACE[1])
+        ind2[i] = clip_value(gamma * ind2[i] + (1. - gamma) * ind1[i], SEARCH_SPACE[0], SEARCH_SPACE[1])
+    return ind1, ind2
+
+def mutGaussian_clipped(individual, mu, sigma, indpb):
+    """Mutação gaussiana com clipping para manter dentro dos limites"""
+    for i in range(len(individual)):
+        if random.random() < indpb:
+            individual[i] = clip_value(random.gauss(mu, sigma) + individual[i], SEARCH_SPACE[0], SEARCH_SPACE[1])
+    return individual,
+
+# Operadores genéticos modificados
+toolbox.register("mate", cxBlend_clipped, alpha=0.5)
+toolbox.register("mutate", mutGaussian_clipped, mu=0, sigma=0.3, indpb=0.2)
 toolbox.register("select", tools.selTournament, tournsize=3)
 toolbox.register("evaluate", evaluate)
 
