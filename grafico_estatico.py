@@ -28,8 +28,11 @@ def funcao_armadilha(x):
     return np.where(x < 4, -x + 4, np.where(x < 5, 5*x - 20, 5))
 
 def evaluate(individual):
-    """Avaliação pela função armadilha, mas fitness é a soma dos bits"""
-    return sum(individual),  # Fitness = soma dos bits
+    """
+    Avalia o indivíduo usando a função armadilha.
+    """
+    fitness_value = funcao_armadilha(individual)  # Avaliação pela função armadilha
+    return fitness_value,  # Retorna o fitness como uma tupla
 
 # Operadores genéticos
 toolbox.register("mate", tools.cxTwoPoint)  # Crossover para binários

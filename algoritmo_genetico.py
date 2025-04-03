@@ -3,27 +3,23 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 
+Grafico = True # Variável para controle de exibição do gráfico
 # Configurações do algoritmo genético
 IND_SIZE = 5     # Tamanho do indivíduo (número de bits)
-POP_SIZE = 5    # Tamanho da população inicial
-CXPB = 0.7       # Probabilidade de crossover (recombinação)
-MUTPB = 0.2      # Probabilidade de mutação
+POP_SIZE = 20    # Tamanho da população inicial
+CXPB = 0.0       # Probabilidade de crossover (recombinação)
+MUTPB = 0.5      # Probabilidade de mutação
 NGEN = 10        # Número de gerações
 SEARCH_SPACE = [0, 5]  # Intervalo de busca para visualização
 
 # Definição da estrutura de fitness e indivíduo
-# `FitnessSum` é usado para maximizar a soma dos bits
 creator.create("FitnessSum", base.Fitness, weights=(1.0,))
-# `Individual` é uma lista que herda a estrutura de fitness definida acima
 creator.create("Individual", list, fitness=creator.FitnessSum)
 
 # Inicialização do toolbox (conjunto de ferramentas do DEAP)
 toolbox = base.Toolbox()
-# Atributo de um indivíduo: bit aleatório (0 ou 1)
 toolbox.register("attr_bool", random.randint, 0, 1)
-# Um indivíduo é uma repetição de bits (tamanho IND_SIZE)
 toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.attr_bool, n=IND_SIZE)
-# Uma população é uma lista de indivíduos
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
 # Função armadilha para avaliação
@@ -41,7 +37,6 @@ def funcao_armadilha(x):
 def evaluate(individual):
     """
     Avalia o indivíduo usando a função armadilha.
-    O fitness é definido como a soma dos bits.
     """
     fitness_value = funcao_armadilha(individual)  # Avaliação pela função armadilha
     return fitness_value,  # Retorna o fitness como uma tupla
@@ -49,7 +44,7 @@ def evaluate(individual):
 # Registro dos operadores genéticos no toolbox
 toolbox.register("mate", tools.cxTwoPoint)  # Crossover de dois pontos
 toolbox.register("mutate", tools.mutFlipBit, indpb=0.2)  # Mutação flip bit com probabilidade de 20%
-toolbox.register("select", tools.selTournament, tournsize=3)  # Seleção por torneio (tamanho 2)
+toolbox.register("select", tools.selTournament, tournsize=2)  # Seleção por torneio (tamanho 2)
 toolbox.register("evaluate", evaluate)  # Função de avaliação
 
 # Função para visualização da população
@@ -67,11 +62,11 @@ def plot_population(population, generation):
     y_values = [funcao_armadilha(ind) for ind in population]
     
     # Plota os indivíduos
-    plt.scatter(x_values, y_values, c='red', label='Indivíduos')
+    plt.scatter(x_values, y_values, c='red', label='Indivíduos', zorder=3)
     # Identifica o melhor indivíduo
     best_ind = max(population, key=lambda ind: ind.fitness.values[0])
     plt.scatter(sum(best_ind), funcao_armadilha(best_ind), 
-                c='green', s=100, label='Melhor (Fitness)')
+                c='green', s=100, label='Melhor (Fitness)', zorder=4)
     
     # Configurações do gráfico
     plt.title(f'Geração {generation}\n')
@@ -80,7 +75,7 @@ def plot_population(population, generation):
     plt.grid(True)
     plt.legend()
     plt.xlim(SEARCH_SPACE)
-    plt.pause(0.2)  # Pausa para atualizar o gráfico
+    plt.pause(0.3)  # Pausa para atualizar o gráfico
 
 # Função principal do algoritmo genético
 def main():
@@ -91,8 +86,9 @@ def main():
     for ind, fit in zip(pop, fitnesses):
         ind.fitness.values = fit
     
-    # Plota a população inicial
-    plot_population(pop, 0)
+    if Grafico:
+        # Plota a população inicial
+        plot_population(pop, 0)
     
     # Loop principal do algoritmo genético
     for gen in range(1, NGEN+1): 
@@ -119,12 +115,38 @@ def main():
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
         
-        # Substituição da população pela nova geração
-        pop[:] = offspring
-        # Plota a nova população
-        plot_population(pop, gen)
+        if Grafico:
+            # Substituição da população pela nova geração
+            pop[:] = offspring
+            # Plota a nova população
+            plot_population(pop, gen)
     
-    plt.show()  # Mostra o gráfico final
+    if Grafico:
+        plt.show()  # Mostra o gráfico final
+
+    if Grafico==False:
+        # Exibe o gráfico apenas no final
+        plt.figure(figsize=(10, 6))
+        x = np.linspace(SEARCH_SPACE[0], SEARCH_SPACE[1], 100)
+        y = funcao_armadilha(x)
+        plt.plot(x, y, 'b-', label='Função Armadilha')
+        
+        # Converter indivíduos binários para valores decimais para plotagem
+        x_values = [sum(ind) for ind in pop]
+        y_values = [funcao_armadilha(ind) for ind in pop]
+        
+        plt.scatter(x_values, y_values, c='red', label='População Final', zorder=3)
+        best_ind = max(pop, key=lambda ind: ind.fitness.values[0])
+        plt.scatter(sum(best_ind), funcao_armadilha(best_ind), 
+                    c='green', s=200, label='Melhor Indivíduo (Fitness)', zorder=4)
+        
+        plt.title('Resultado Final - Algoritmo Genético')
+        plt.xlabel('Soma dos bits do indivíduo')
+        plt.ylabel('Valor da função armadilha')
+        plt.grid(True)
+        plt.legend()
+        plt.show()
+
     return pop
 
 # Execução do script
