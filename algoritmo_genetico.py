@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 Grafico = True # Variável para controle de exibição do gráfico
 # Configurações do algoritmo genético
 IND_SIZE = 5     # Tamanho do indivíduo (número de bits)
-POP_SIZE = 20    # Tamanho da população inicial
+POP_SIZE = 10    # Tamanho da população inicial
 CXPB = 0.0       # Probabilidade de crossover (recombinação)
 MUTPB = 0.5      # Probabilidade de mutação
 NGEN = 10        # Número de gerações
@@ -40,6 +40,7 @@ def evaluate(individual):
     """
     fitness_value = funcao_armadilha(individual)  # Avaliação pela função armadilha
     return fitness_value,  # Retorna o fitness como uma tupla
+
 
 # Registro dos operadores genéticos no toolbox
 toolbox.register("mate", tools.cxTwoPoint)  # Crossover de dois pontos
@@ -114,15 +115,19 @@ def main():
         fitnesses = map(toolbox.evaluate, invalid_ind)
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
-        
+
         if Grafico:
             # Substituição da população pela nova geração
             pop[:] = offspring
             # Plota a nova população
             plot_population(pop, gen)
+        
+        
+            
     
     if Grafico:
         plt.show()  # Mostra o gráfico final
+ 
 
     if Grafico==False:
         # Exibe o gráfico apenas no final
